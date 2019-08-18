@@ -1,0 +1,23 @@
+service: rumble-fish-endpoint
+app: rumble-fish-endpoint-app
+org: piter2k1
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+
+package:
+  exclude:
+    - privateKey.pem
+    - .gitignore
+    - package.json
+    - yarn.lock
+    - node_modules/**
+
+functions:
+  endpoint:
+    handler: handler.endpoint
+    events:
+      - http:
+          path: dev
+          method: get
