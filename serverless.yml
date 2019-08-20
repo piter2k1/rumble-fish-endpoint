@@ -8,7 +8,9 @@ provider:
 
 package:
   exclude:
+    - publicKey.pub
     - privateKey.pem
+    - verify.js
     - .gitignore
     - package.json
     - yarn.lock
