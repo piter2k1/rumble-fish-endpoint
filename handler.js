@@ -52,29 +52,36 @@ function transformToRSAFormat(plaintext) {
   return `-----BEGIN RSA PRIVATE KEY-----\n${plaintext}\n-----END RSA PRIVATE KEY-----`;
 }
 
-module.exports.endpoint = (event, context, callback) => {
-  if (privateKey) {
-    processEvent(event, context, callback);
-  } else {
-    const kms = new AWS.KMS();
-    kms.decrypt(
-      { CiphertextBlob: Buffer.from(privateKeyEncrypted, "base64") },
-      (err, data) => {
-        if (err) {
-          console.log("Decrypt error:", err);
-          return callback(err);
-        }
-        // Private key is stored as plaintext with spaces in encrypted environment keys.
-        // We need to transform it to properly RSA schema.
-        privateKey = transformToRSAFormat(data.Plaintext.toString("ascii"));
+function decryptPrivateKey() {
+  const KMS = new AWS.KMS();
+  const request = KMS.decrypt({
+    CiphertextBlob: Buffer.from(privateKeyEncrypted, "base64")
+  });
 
-        processEvent(event, context, callback);
-      }
-    );
+  return request.promise().then(data => data.Plaintext.toString("ascii"));
+}
+
+function initPrivateKey() {
+  return new Promise(async (resolve, reject) => {
+    if (privateKey) resolve();
+
+    try {
+      const rawPrivateKey = await decryptPrivateKey();
+      privateKey = transformToRSAFormat(rawPrivateKey);
+      resolve();
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+module.exports.endpoint = async (event, context, callback) => {
+  try {
+    await initPrivateKey();
+  } catch (error) {
+    console.log("Decrypt error:", error);
   }
-};
 
-function processEvent(event, context, callback) {
   const response = {
     statusCode: 200,
     headers: {
@@ -84,4 +91,4 @@ function processEvent(event, context, callback) {
   };
 
   callback(null, response);
-}
+};
