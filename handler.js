@@ -58,7 +58,10 @@ function decryptPrivateKey() {
     CiphertextBlob: Buffer.from(privateKeyEncrypted, "base64")
   });
 
-  return request.promise().then(data => data.Plaintext.toString("ascii"));
+  return request
+    .promise()
+    .then(data => data.Plaintext.toString("ascii"))
+    .then(data => transformToRSAFormat(data));
 }
 
 function initPrivateKey() {
@@ -66,8 +69,7 @@ function initPrivateKey() {
     if (privateKey) resolve();
 
     try {
-      const rawPrivateKey = await decryptPrivateKey();
-      privateKey = transformToRSAFormat(rawPrivateKey);
+      privateKey = await decryptPrivateKey();
       resolve();
     } catch (error) {
       reject(error);
