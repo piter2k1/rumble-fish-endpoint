@@ -77,20 +77,29 @@ function initPrivateKey() {
   });
 }
 
+function createResponse(body, statusCode = 200) {
+  return {
+    headers: {
+      "Content-Type": "application/json"
+    },
+    statusCode,
+    body: JSON.stringify(body)
+  };
+}
+
 module.exports.endpoint = async (event, context, callback) => {
   try {
     await initPrivateKey();
   } catch (error) {
-    console.log("Decrypt error:", error);
+    console.error("Decrypt private key error:", error);
+
+    return callback(
+      null,
+      createResponse(500, {
+        error: "Internal Server Error"
+      })
+    );
   }
 
-  const response = {
-    statusCode: 200,
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(prepareBody())
-  };
-
-  callback(null, response);
+  callback(null, createResponse(prepareBody()));
 };
