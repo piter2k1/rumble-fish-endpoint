@@ -8,14 +8,14 @@ const test = {
     "0x9eec98a09ee7662f04336df8337edff5558fff29a09b1b89fb96abf5e6f6f97bdc0f66d5da69443c00e7dba73a51aeabc4b68df8a566845ab5463f82373dfba8"
 };
 
-const pem = fs.readFileSync("publicKey.pub");
-const publicKey = pem.toString("ascii");
+const pub = fs.readFileSync("publicKey.pub");
+const publicKey = pub.toString("ascii");
 
-const valueToSign = "" + test.value + test.epoch;
+const valueToVerify = "" + test.value + test.epoch;
 const signature = test.signature.replace(/^0x/, "");
 
 const verifier = crypto.createVerify("RSA-SHA256");
-verifier.update(valueToSign);
+verifier.update(valueToVerify);
 const status = verifier.verify(publicKey, signature, "hex");
 
 if (status) {
